@@ -2,6 +2,10 @@
   "name": "usergems-server",
   "version": "1.0.0",
   "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/christophmayrhofer/usergems-server.git"
+  },
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,7 +17,9 @@
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "express-jwt": "^5.1.0",
+    "is-undefined": "^1.0.5",
     "jsonwebtoken": "^7.2.1",
-    "pg": "^6.1.2"
+    "pg": "^6.1.2",
+    "validator": "^6.2.1"
   }
 }

@@ -1,7 +1,7 @@
 const pg = require('pg');
 const pgConfig = require('./pg.config');
 
-module.exports.initUser = (res, user) => {
+module.exports.initUser = (res, id, email, username) => {
   const client = new pg.Client(pgConfig);
   client.connect();
   const sql = `INSERT INTO users ("id", "email", "username")
@@ -12,24 +12,22 @@ module.exports.initUser = (res, user) => {
                 WHERE id=$1 AND email = $2 AND username = $3
                 )
                 returning id`;
-  const values = [user.id, user.email, user.username];
+  const values = [id, email, username];
   const query = client.query(sql, values)
   query.on('end', (data) => {
     client.end();
-    console.log(data.rows);
     return res.json(data.rows);
   });
 }
 
-module.exports.addTweet = (res, tweet) => {
+module.exports.addTweet = (res, userId, text) => {
   const client = new pg.Client(pgConfig);
   client.connect();
   const sql = `INSERT INTO tweets ("userid", "text", "timestamp") VALUES($1, $2, $3)`;
-  const values = [tweet.userId, tweet.text, new Date().toISOString()];
+  const values = [userId, text, new Date().toISOString()];
   const query = client.query(sql, values)
   query.on('end', (data) => {
     client.end();
-    console.log(data.rows);
     return res.json(data.rows);
   });
 }
@@ -41,13 +39,12 @@ module.exports.getUserTweets = (res, username) => {
               FROM users u, tweets t
               WHERE u.id = t.userid
               AND u.username = $1
-              ORDER BY timestamp
+              ORDER BY timestamp DESC
               LIMIT 100`;
   const values = [username];
   const query = client.query(sql, values)
   query.on('end', (data) => {
     client.end();
-    console.log(data.rows);
     return res.json(data.rows);
   });
 }
@@ -96,7 +93,6 @@ module.exports.deleteSubscription = (res, subscriptionId, subscriberId) => {
   const query = client.query(sql, values)
   query.on('end', (data) => {
     client.end();
-    console.log(data.rows);
     return res.json(data.rows);
   });
 }
@@ -113,7 +109,6 @@ module.exports.getUserSubscriptions = (res, userid) => {
   const query = client.query(sql, values)
   query.on('end', (data) => {
     client.end();
-    console.log(data.rows);
     return res.json(data.rows);
   });
 }
@@ -124,13 +119,27 @@ module.exports.getUserFeed = (res, userid) => {
   const sql = `SELECT u.username, t.text, t.timestamp 
                FROM users u, tweets t
                 WHERE u.id = t.userid
-                AND userid IN
-                  (SELECT userid FROM subscriptions WHERE subscriberid = $1)`;
+                AND ( userid = $1
+                      OR userid IN
+                        (SELECT userid FROM subscriptions WHERE subscriberid = $1))
+                ORDER BY t.timestamp DESC
+                LIMIT 100`;
   const values = [userid];
   const query = client.query(sql, values)
   query.on('end', (data) => {
     client.end();
-    console.log(data.rows);
+    return res.json(data.rows);
+  });
+}
+
+module.exports.getUsernames = (res, username) => {
+  const client = new pg.Client(pgConfig);
+  client.connect();
+  const sql = `SELECT username FROM users WHERE username ILIKE $1 LIMIT 10`;
+  const values = [`%${username}%`];
+  const query = client.query(sql, values)
+  query.on('end', (data) => {
+    client.end();
     return res.json(data.rows);
   });
 }
