@@ -52,6 +52,7 @@ app.post('/private/initUser', (req, res) => {
   const user = req.body;
   const email = user.email;
   const username = user.username;
+  console.log(user);
   if(isUndefined(email) ||  !validator.isEmail(email)
      || isUndefined(username) || !validator.isAlphanumeric(username)){
     res.status(422).send('Invalid User data');
@@ -95,4 +96,8 @@ app.get('/private/getUserSubscriptions', (req, res) => {
 app.get('/private/getUserFeed', (req, res) => {
   const userid = req.user.sub;
   db.getUserFeed(res, userid);
+});
+
+app.get('/public/getPublicFeed', (req, res) => {
+  db.getPublicFeed(res);
 });

@@ -143,3 +143,18 @@ module.exports.getUsernames = (res, username) => {
     return res.json(data.rows);
   });
 }
+
+module.exports.getPublicFeed = (res) => {
+  const client = new pg.Client(pgConfig);
+  client.connect();
+  const sql = `SELECT u.username, t.text, t.timestamp 
+               FROM users u, tweets t
+                WHERE u.id = t.userid
+                ORDER BY t.timestamp DESC
+                LIMIT 100`;
+  const query = client.query(sql)
+  query.on('end', (data) => {
+    client.end();
+    return res.json(data.rows);
+  });
+}
