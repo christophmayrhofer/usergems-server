@@ -1,3 +1,4 @@
+const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 const express = require('express');
 const bodyParser = require('body-parser');
 const jwtExpress = require('express-jwt');
@@ -14,6 +15,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.raw());
 app.use(bodyParser.text());
+app.use(awsServerlessExpressMiddleware.eventContext());
+module.exports = app;
 
 // Allow CORS for development (update with server IP for production)
 app.use(function(req, res, next) {
@@ -35,7 +38,7 @@ app.listen(port, () => {
 app.get('/public/getUserTweets', (req, res) => {
   const username = req.query.username;
   if(isUndefined(username) || !validator.isAlphanumeric(username)){
-    res.status(422).send('Invalid username parameter');
+    return res.status(422).send('Invalid username parameter');
   }
   db.getUserTweets(res, username);
 });
@@ -43,7 +46,7 @@ app.get('/public/getUserTweets', (req, res) => {
 app.get('/public/getUsernames', (req, res) => {
   const username = req.query.username;
   if(isUndefined(username) || !validator.isAlphanumeric(username)){
-    res.status(422).send('Invalid username parameter');
+    return res.status(422).send('Invalid username parameter');
   }
   db.getUsernames(res, username);
 });
@@ -55,7 +58,7 @@ app.post('/private/initUser', (req, res) => {
   console.log(user);
   if(isUndefined(email) ||  !validator.isEmail(email)
      || isUndefined(username) || !validator.isAlphanumeric(username)){
-    res.status(422).send('Invalid User data');
+    return res.status(422).send('Invalid User data');
   }
   const id = req.user.sub;
   db.initUser(res, id, email, username);
@@ -64,7 +67,7 @@ app.post('/private/initUser', (req, res) => {
 app.post('/private/addTweet', (req, res) => {
   const text = req.body;
   if(isUndefined(text) || !validator.isAlphanumeric(text)){
-    res.status(422).send('Invalid request body');
+    return res.status(422).send('Invalid request body');
   }
   const userId = req.user.sub;
   db.addTweet(res, userId, text);
@@ -73,7 +76,7 @@ app.post('/private/addTweet', (req, res) => {
 app.post('/private/addSubscription', (req, res) => {
   const username = req.body;
   if(isUndefined(username) ||  !validator.isAlphanumeric(username)){
-    res.status(422).send('Invalid request body');
+    return res.status(422).send('Invalid request body');
   }
   const subscriberId = req.user.sub;
   db.addSubscriptionByUsername(res, username, subscriberId);
@@ -82,7 +85,7 @@ app.post('/private/addSubscription', (req, res) => {
 app.delete('/private/deleteSubscription', (req, res) => {
   const subscriptionId = req.query.id;
   if(isUndefined(subscriptionId) || !validator.isInt(subscriptionId)){
-    res.status(422).send('Invalid subscription id parameter');
+    return res.status(422).send('Invalid subscription id parameter');
   }
   const subscriberId = req.user.sub;
   db.deleteSubscription(res, subscriptionId, subscriberId);
